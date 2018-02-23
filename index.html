@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>钣金展开</title>
+  <script>
+task=false;
+prompts={
+  ["90度弯头"]:["圆管半径","半圆等分数"],
+  ["任意度数弯头"]:["圆管半径","多出部分","半圆等分数"],
+  ["虾米弯头"]:["皮厚","圆管内半径","R","节数","半圆等分数"],
+  ["天方地方"]:["底面的长","底面的宽","上面的长","上面的宽","高度","上面中心距离底面上边","上面中心距离底面左边"],
+}
+function ce(n){return document.createElement(n);}
+function ge(n){return document.getElementById(n);}
+function genForm(listOfPrompt){
+  var f=ce("form");
+  for(var i in listOfPrompt){
+    var b=ce("button"); b.innerHTML=listOfPrompt[i]; f.appendChild(b);
+    var n=ce("input"); n.type="number"; n.id=listOfPrompt[i]; f.appendChild(n);
+    f.appendChild(ce("br"));
+  }
+  return f;
+}
+function relayout(e){
+  console.log(e);
+  //task=e.target.value;
+  task=e.target.innerHTML;
+  var i=ge("inputs");
+  i.innerHTML="";
+  i.appendChild(genForm(prompts[task]));
+  var b=ce("button"); b.onclick=inputs2outputs; b.innerHTML="确定"; i.appendChild(b);
+}
+function inputs2outputs(){
+  //TODO
+  var o=ge("outputs");
+  for(var i in prompts[task]){
+    o.innerHTML+=prompts[task][i];
+    o.innerHTML+=1+parseFloat(ge(prompts[task][i]).value);
+  }
+}
+  </script>
+</head>
+<body>
+  <div>
+    <script>
+      for(var k in prompts){
+        document.write('<button onclick="relayout(event)">');
+        document.write(k);
+        document.write('</button>\n');
+      }
+    </script>
+  </div>
+  <hr />
+  <div id="inputs"></div>
+  <hr />
+  <div id="outputs"></div>
+</body>
+</html>
