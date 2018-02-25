@@ -10,11 +10,12 @@ prompts={
   ["任意度数弯头"]:["圆管半径","多出部分","半圆等分数"],
   ["虾米弯头"]:["皮厚","圆管内半径","R","节数","半圆等分数"],
   ["天方地方"]:["底面的长","底面的宽","上面的长","上面的宽","高度","上面中心距离底面上边","上面中心距离底面左边"],
-}
+  ["天圆地方"]:["长方形的长","长方形的宽","高度","圆的半径","整圆的等分数","圆心到上边的距离","圆心到左边的距离"],
+};
 function ce(n){return document.createElement(n);}
 function ge(n){return document.getElementById(n);}
 function genForm(listOfPrompt){
-  var f=ce("form");
+  var f=ce("div");
   for(var i in listOfPrompt){
     var b=ce("button"); b.innerHTML=listOfPrompt[i]; f.appendChild(b);
     var n=ce("input"); n.type="number"; n.id=listOfPrompt[i]; f.appendChild(n);
@@ -23,8 +24,10 @@ function genForm(listOfPrompt){
   return f;
 }
 function relayout(e){
-  console.log(e);
-  //task=e.target.value;
+  //console.log(e);
+  for(var i in prompts[task]){
+    window['v_'+prompts[task][i]]=undefined;
+  }
   task=e.target.innerHTML;
   var i=ge("inputs");
   i.innerHTML="";
@@ -32,12 +35,100 @@ function relayout(e){
   var b=ce("button"); b.onclick=inputs2outputs; b.innerHTML="确定"; i.appendChild(b);
 }
 function inputs2outputs(){
-  //TODO
   var o=ge("outputs");
+  o.innerHTML=task+'<br /><br />';
   for(var i in prompts[task]){
     o.innerHTML+=prompts[task][i];
-    o.innerHTML+=1+parseFloat(ge(prompts[task][i]).value);
+    window['v_'+prompts[task][i]]=parseFloat(ge(prompts[task][i]).value);
+    o.innerHTML+=window['v_'+prompts[task][i]]
+    o.innerHTML+='<br />';
   }
+  var fn='solve_'+task;
+  if(fn in window){
+    o.innerHTML+='<br />'+window[fn]();
+  }
+}
+////////
+function pythagoras(x,y){
+  return Math.sqrt(x*x+y*y);
+}
+
+function solve_90度弯头(){
+  var res="";
+  var phi=Math.PI/v_半圆等分数;
+  for(var i=0; i<=v_半圆等分数; i++){
+    res+="第 "+(i+1)+" 道线的长度是："+v_圆管半径*(1-Math.cos(phi*i))+"<br />";
+  }
+  return res;
+}
+function solve_任意度数弯头(){
+  var res="";
+  var phi=Math.PI/v_半圆等分数;
+  for(var i=0; i<=v_半圆等分数; i++){
+    res+="第 "+(i+1)+" 道线的长度是："+(1-Math.cos(phi*i)) * v_多出部分/2+"<br />";
+  }
+  return res;
+}
+function solve_虾米弯头(){
+  var res="";
+  var theta=Math.PI/2/(v_节数-1)/2;
+  var alpha=Math.PI/v_半圆等分数;
+  for(var i=0; i<=v_半圆等分数; i++){
+    res+="第 "+(i+1)+" 道线的长度是："
+        +2*Math.tan(theta)*(v_R+Math.cos(alpha*i)*(i<v_半圆等分数/2 ? v_圆管内半径+v_皮厚 : v_圆管内半径))
+        +'<br />';
+  }
+  return res;
+}
+function solve_天方地方(){
+  var res="";
+  res+="上面上边到底面上边的距离是："+pythagoras(v_高度,v_上面中心距离底面上边-v_上面的宽/2)+'<br />';
+  res+="上面下边到底面下边的距离是："+pythagoras(v_高度,v_底面的宽-v_上面中心距离底面上边-v_上面的宽/2)+'<br />';
+  res+="上面左边到底面左边的距离是："+pythagoras(v_高度,v_上面中心距离底面左边-v_上面的长/2)+'<br />';
+  res+="上面右边到底面右边的距离是："+pythagoras(v_高度,v_底面的长-v_上面中心距离底面左边-v_上面的长/2)+'<br />';
+  return res;
+}
+function solve_天圆地方(){
+  var res="";
+  var a=v_长方形的长;
+  var b=v_长方形的宽;
+  var h=v_高度;
+  var r=v_圆的半径;
+  var n=v_整圆的等分数
+  var left=v_圆心到左边的距离;
+  var top=v_圆心到上边的距离;
+
+  var h2=h*h;
+  var phi=Math.PI*2/v_整圆的等分数;
+  res+="A线的长度："+pythagoras(h,left-r)+'<br />';
+  res+="B线的长度：" +pythagoras(h,b-top-r)+'<br />';
+  res+="C线的长度是："+pythagoras(h,a-left-r)+'<br />';
+  res+="D线的长度是："+pythagoras(h,top-r)+'<br />';
+  res+="左上角，从上到下："+'<br />';
+  for(var i=0; i<=n/4; i++){
+    var t1=left-r*Math.sin(phi*i);
+    var t2=top-r*Math.cos(phi*i);
+    res+="第 "+(i+1)+" 道线的长度是："+Math.sqrt(h2+t1*t1+t2*t2)+'<br />';
+  }
+  res+="右上角，从上到下："+'<br />';
+  for(var i=0; i<=n/4; i++){
+    var t1=a-left-r*Math.sin(phi*i);
+    var t2=top-r*Math.cos(phi*i);
+    res+="第 "+(i+1)+" 道线的长度是："+Math.sqrt(h2+t1*t1+t2*t2)+'<br />';
+  }
+  res+="左下角，从上到下："+'<br />';
+  for(var i=0; i<=n/4; i++){
+    var t1=left-r*Math.cos(phi*i);
+    var t2=b-top-r*Math.sin(phi*i);
+    res+="第 "+(i+1)+" 道线的长度是："+Math.sqrt(h2+t1*t1+t2*t2)+'<br />';
+  }
+  res+="右下角，从上到下："+'<br />';
+  for(var i=0; i<=n/4; i++){
+    var t1=a-left-r*Math.cos(phi*i);
+    var t2=b-top-r*Math.sin(phi*i);
+    res+="第 "+(i+1)+" 道线的长度是："+Math.sqrt(h2+t1*t1+t2*t2)+'<br />';
+  }
+  return res;
 }
   </script>
 </head>
